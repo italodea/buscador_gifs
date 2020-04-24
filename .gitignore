@@ -35,3 +35,10 @@ lib/generated_plugin_registrant.dart
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+flutter_launcher
+lib/libflutter_embedder_color_panel.so
+lib/libflutter_embedder_file_chooser.so
+lib/libflutter_embedder_menubar.so
+lib/libflutter_embedder.so
+lib/libflutter_engine.so
+build/icudtl.dat
