@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart'  as http;
+import 'package:share/share.dart';
+import 'package:transparent_image/transparent_image.dart';
+import 'GifPage.dart';
 
 
 class HomePage extends StatefulWidget {
-  
-
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -22,7 +23,7 @@ class _HomePageState extends State<HomePage> {
       response = await http.get("https://api.giphy.com/v1/gifs/trending?api_key=djQ3MZ4rQBr8FElPV0rVR6lOtJO1Jeea&limit=20&rating=G");
 
     }else{
-      response = await http.get("https://api.giphy.com/v1/gifs/search?api_key=djQ3MZ4rQBr8FElPV0rVR6lOtJO1Jeea&q=$_search&limit=20&offset=$_offset&rating=G&lang=en");
+      response = await http.get("https://api.giphy.com/v1/gifs/search?api_key=djQ3MZ4rQBr8FElPV0rVR6lOtJO1Jeea&q=$_search&limit=19&offset=$_offset&rating=G&lang=en");
     }
 
     return json.decode(response.body);
@@ -58,7 +59,16 @@ class _HomePageState extends State<HomePage> {
               onSubmitted: (text){
                 setState(() {
                   _search = text;
+                  _offset = 0;
                 });
+              },
+              onChanged: (text){
+                if (text == ""){
+                  setState(() {
+                    _search = null;
+                    _offset = 0;
+                  });
+                }
               },
               style: TextStyle(
                 color: Colors.black,
@@ -105,6 +115,13 @@ class _HomePageState extends State<HomePage> {
 
     );
   }
+
+int _getCount(List data){
+    if (_search == null){
+    return data.length;
+  }else{
+    return data.length + 1;
+  }
 }
 
 Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot){
@@ -115,15 +132,45 @@ Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot){
       crossAxisSpacing: 10,
       mainAxisSpacing: 10
     ),
-    itemCount: snapshot.data["data"].length, 
+    itemCount: _getCount(snapshot.data["data"]), 
     itemBuilder: (context,index){
-      return GestureDetector(
-        child: Image.network(
-          snapshot.data["data"][index]["images"]["fixed_height_small"]["url"],
-          fit: BoxFit.cover,
-          height: 300,
+      if(_search == null || index < snapshot.data["data"].length){
+        return GestureDetector(
+          child: FadeInImage.memoryNetwork(
+            placeholder: kTransparentImage, 
+            image: snapshot.data["data"][index]["images"]["fixed_height_small"]["url"],
+            height: 300.0,
+            fit: BoxFit.cover,
           ),
-      );
+          onTap: (){
+            Navigator.push(context, 
+              MaterialPageRoute(builder: (context)=>GifPage(snapshot.data["data"][index]))
+            );
+          },
+          onLongPress: (){
+            Share.share("Veja este gif que legal. \n "+snapshot.data["data"][index]["images"]["fixed_height_small"]["url"]);
+          },
+        );
+      }else{
+        return Container(
+          padding: EdgeInsets.only(top:40),
+          child: GestureDetector(
+            child: Column(
+              children: <Widget>[
+                Icon(Icons.add, color: Colors.white, size: 70,),
+                Text("Carregar mais...",style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),),
+              ],
+            ),
+            onTap: (){
+              setState(() {
+                _offset += 19;
+              });
+            },
+          ),
+        );
+      }
+      
     }
   );
+}
 }
